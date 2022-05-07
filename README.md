@@ -1,2 +1,2 @@
 # ShogiGUI
-ShogiGUI for chichiwan/99shogi
+GUI for chichiwan/99shogi
