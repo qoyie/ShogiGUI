@@ -1,5 +1,5 @@
 # ShogiGUI
-GUI for chichiwan/99shogi
+GUI for chichiwan/99shogi<br>
 こっちの環境では99shogiがSegmentation faultが起きたからテスト出来なかった。
 
 # Usage
