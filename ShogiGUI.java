@@ -36,19 +36,19 @@ public class ShogiGUI extends JFrame implements MouseListener{
 		header.setReorderingAllowed(false);
 		header.setResizingAllowed(false);
 		int[]var={10};
-		forEach(header.getColumnModel().getColumns(),e->{e.setHeaderValue(var[0]==1?"^":""+ --var[0]);});
+		forEach(header.getColumnModel().getColumns(),e->{e.setHeaderValue(var[0]==1?"ï¼":""+ --var[0]);});
 		table.setDefaultEditor(Object.class,null);
 		table.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
 		//table.getSelectionModel().addListSelectionListener(e->{System.out.println("columns:"+Arrays.toString(table.getSelectedColumns())+",rows:"+Arrays.toString(table.getSelectedRows()));});
-		table.setValueAt("ˆê",0,9);
-		table.setValueAt("“ñ",1,9);
-		table.setValueAt("O",2,9);
-		table.setValueAt("l",3,9);
-		table.setValueAt("ŒÜ",4,9);
-		table.setValueAt("˜Z",5,9);
-		table.setValueAt("µ",6,9);
-		table.setValueAt("”ª",7,9);
-		table.setValueAt("‹ã",8,9);
+		table.setValueAt("ä¸€",0,9);
+		table.setValueAt("äºŒ",1,9);
+		table.setValueAt("ä¸‰",2,9);
+		table.setValueAt("å››",3,9);
+		table.setValueAt("äº”",4,9);
+		table.setValueAt("å…­",5,9);
+		table.setValueAt("ä¸ƒ",6,9);
+		table.setValueAt("å…«",7,9);
+		table.setValueAt("ä¹",8,9);
 		message=new JButton();
 		message.setText("Shogi GUI");
 		message.addActionListener(e->{col=-1;table.clearSelection();message.setText("Shogi GUI");});
@@ -77,7 +77,7 @@ public class ShogiGUI extends JFrame implements MouseListener{
 			String s=pin.nextLine();
 			System.out.println(s);
 			return s;
-		}catch(NullPointerException e){
+		}catch(NoSuchElementException e){
 			throw new ThreadDeath();
 		}catch(Exception e){
 			e(e);
@@ -124,20 +124,20 @@ public class ShogiGUI extends JFrame implements MouseListener{
 	}
 	public String getName(String n){
 		switch(n){
-			case"+•à":return"HU";
-			case"+":return"KY";
-			case"+Œj":return"KE";
-			case"+‹â":return"GI";
-			case"+‹à":return"KI";
-			case"+Šp":return"KA";
-			case"+”ò":return"HI";
-			case"+‚Æ":return"TO";
-			case"+ˆÇ":return"NY";
-			case"+Œ\":return"NK";
-			case"+‘S":return"NG";
-			case"+”n":return"UM";
-			case"+—³":return"RY";
-			case"+‹Ê":return"GY";
+			case"+æ­©":return"HU";
+			case"+é¦™":return"KY";
+			case"+æ¡‚":return"KE";
+			case"+éŠ€":return"GI";
+			case"+é‡‘":return"KI";
+			case"+è§’":return"KA";
+			case"+é£›":return"HI";
+			case"+ã¨":return"TO";
+			case"+æ":return"NY";
+			case"+åœ­":return"NK";
+			case"+å…¨":return"NG";
+			case"+é¦¬":return"UM";
+			case"+ç«œ":return"RY";
+			case"+ç‰":return"GY";
 			case" *":return "";
 			default:return null;
 		}
