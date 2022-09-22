@@ -1,12 +1,23 @@
 # ShogiGUI
-GUI for chichiwan/99shogi<br>
+
+GUI for [chichiwan/99shogi](https://github.com/chichiwan/99shogi) and [qoyie/99shogi](https://github.com/qoyie/99shogi).<br>
+
+# 使い方
+
+1. 動かしたい駒をクリックする。
+2. 動かしたい方向をクリックする。
+
+もしくは動かしたい駒を動かしたい方向にドラッグアンドドロップのようなことをしてください。
 
 # Usage
-`java ShogiGUI -h`<br>
-`java ShogiGUI [executable file]`<br>
-<br>
-<br>
-`               -h Show this help.`<br>
-<br>
-`[executable file] Executable file of 99shogi.`<br>
-`                  Default: a.out`<br>
+
+<pre>
+java ShogiGUI -h
+java ShogiGUI [executable file]
+
+
+               -h Show this help.
+
+[executable file] Executable file of 99shogi.
+                  Default: a.out
+</pre>
