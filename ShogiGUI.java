@@ -8,55 +8,56 @@ import javax.swing.event.*;
 import javax.swing.table.*;
 
 public class ShogiGUI extends JFrame implements MouseListener{
-	public static final String ENCODE=System.getProperty("ShogiGUI.input_encoding","UTF-8");
-	public static final boolean AUTO_NARU=false;
-	
-	public static final String MSG_SELECT="Selected %s (Click here to cancel)";
-	public static final String MSG_EXEC="Moving %s from %d,%d to %d,%d";
-	public static final String MSG_ERR_ENEMY="Error: %s is enemy's koma";
-	public static final String MSG_ERR_CANNOT_MOVE="Error: %s can't move to %d,%d";
-	public static final String MSG_ERR_INTERNAL_ERROR="Error: Internal error. Program will shutdown in 10sec.";
-	public static final String MSG_ERR_99SHOGI_EXITED="Error: 99shogi exited. Program will shutdown in 10sec.";
-	public static final String MSG_ERR_99SHOGI_DOES_NOT_RESPONSE="Error: 99shogi does not response by 10sec.";
-	
+	private static final String ENCODE=System.getProperty("ShogiGUI.input_encoding","UTF-8");
+	private static final String MSG_SELECT="Selected %s (Click here to cancel)";
+	private static final String MSG_EXEC="Moving %s from %d,%d to %d,%d";
+	private static final String MSG_ERR_ENEMY="Error: %s is enemy's piece";
+	private static final String MSG_ERR_CANNOT_MOVE="Error: %s can't move to %d,%d";
+	private static final String MSG_ERR_INTERNAL_ERROR="Error: Internal error. Program will shutdown in 10sec.";
+	private static final String MSG_ERR_99SHOGI_EXITED="Error: 99shogi exited. Program will shutdown in 10sec.";
+	private static final String MSG_ERR_99SHOGI_DOES_NOT_RESPONSE="Error: 99shogi does not response by 10sec.";
+	private static final String MSG_NARU="Do you want to naru %s to %s?";
 	private static Process proc;
 	private static Scanner pin;
 	private static PrintStream pout;
 	private static ShogiGUI main;
 	private JTable table;
-	private JPanel panel;
+	private JList ownpiece;
+	private JList eownpiece;
+	//private JPanel panel;
 	private JButton message;
 	private int row,col=-1;
 	public ShogiGUI(String title){
 		setTitle(title);
 		setBounds(10,10,250,230);
-		table=new JTable(9,10);
+		Object data[][]=new Object[9][10];
+		data[0][9]="一";
+		data[1][9]="二";
+		data[2][9]="三";
+		data[3][9]="四";
+		data[4][9]="五";
+		data[5][9]="六";
+		data[6][9]="七";
+		data[7][9]="八";
+		data[8][9]="九";
+		table=new JTable(data,new Object[]{9,8,7,6,5,4,3,2,1,"／"});
 		table.addMouseListener(this);
-		JTableHeader header=table.getTableHeader();
-		header.setReorderingAllowed(false);
-		header.setResizingAllowed(false);
-		int[]var={10};
-		forEach(header.getColumnModel().getColumns(),e->{e.setHeaderValue(var[0]==1?"／":""+ --var[0]);});
 		table.setDefaultEditor(Object.class,null);
 		table.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-		table.setValueAt("一",0,9);
-		table.setValueAt("二",1,9);
-		table.setValueAt("三",2,9);
-		table.setValueAt("四",3,9);
-		table.setValueAt("五",4,9);
-		table.setValueAt("六",5,9);
-		table.setValueAt("七",6,9);
-		table.setValueAt("八",7,9);
-		table.setValueAt("九",8,9);
+		table.getTableHeader().setResizingAllowed(false);
+		table.getTableHeader().setReorderingAllowed(false);
 		message=new JButton();
 		message.setText("Shogi GUI");
-		message.addActionListener(e->{col=-1;table.clearSelection();message.setText("Shogi GUI");});
-		panel=new JPanel();
-		panel.setLayout(new BorderLayout());
-		panel.add(header,BorderLayout.NORTH);
-		panel.add(table,BorderLayout.CENTER);
-		panel.add(message,BorderLayout.SOUTH);
-		getContentPane().add(panel,BorderLayout.CENTER);
+		message.addActionListener(e->{
+			col=-1;
+			table.clearSelection();
+			message.setText("Shogi GUI");
+		});
+		//panel=new JPanel();
+		//panel.setLayout(new BorderLayout());
+		getContentPane().add(new JScrollPane(table,ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER,ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER),BorderLayout.CENTER);
+		getContentPane().add(message,BorderLayout.SOUTH);
+		//getContentPane().add(panel,BorderLayout.CENTER);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 	public static void main(String[]args)throws IOException{
@@ -77,7 +78,7 @@ public class ShogiGUI extends JFrame implements MouseListener{
 			System.out.println(s);
 			return s;
 		}catch(NoSuchElementException e){
-			throw new ThreadDeath();
+			throw e;
 		}catch(Exception e){
 			e(e);
 			return null;
@@ -88,8 +89,8 @@ public class ShogiGUI extends JFrame implements MouseListener{
 			String line;
 			//Thread t=Thread.currentThread();
 			while(true){
-				line=read();
-				if(line.trim().equals("9  8  7  6  5  4  3  2  1")){
+				line=read().trim();
+				if(line.equals("9  8  7  6  5  4  3  2  1")){
 					try{
 						SwingUtilities.invokeAndWait(()->{
 							for(int i=0;i<9;++i){
@@ -109,18 +110,44 @@ public class ShogiGUI extends JFrame implements MouseListener{
 							}
 							message.setText("Shogi GUI");
 						});
+					}catch(NoSuchElementException e){
+						throw e;
 					}catch(Exception e){e(e);}
+				}else if(line.equals("*** YOU WIN! ***")){
+					message.setText("*** YOU WIN! ***");
+					while(true){
+						try{
+							for(ActionListener a:message.getActionListeners()){
+								message.removeActionListener(a);
+							}
+							break;
+						}catch(Throwable t){}
+					}
+					synchronized(MSG_EXEC){}
+				}else if(line.equals("*** YOU LOSE ***")){
+					message.setText("*** YOU LOSE ***");
+					while(true){
+						try{
+							for(ActionListener a:message.getActionListeners()){
+								message.removeActionListener(a);
+							}
+							break;
+						}catch(Throwable t){}
+					}
+					synchronized(MSG_EXEC){}
 				}
 			}
-		}catch(ThreadDeath e){
+		}catch(NoSuchElementException e){
 			message.setText(MSG_ERR_99SHOGI_EXITED);
 		}catch(Exception e){
 			message.setText(MSG_ERR_INTERNAL_ERROR);
 		}finally{
-			while(true)try{
-				Thread.sleep(10000);
-				System.exit(0);
-			}catch(Throwable t){}
+			while(true){
+				try{
+					Thread.sleep(10000);
+					System.exit(0);
+				}catch(Throwable t){}
+			}
 		}
 	}
 	public String getName(String n){
@@ -143,7 +170,7 @@ public class ShogiGUI extends JFrame implements MouseListener{
 			default:return null;
 		}
 	}
-	public String checkName(String s){
+	public String checkName(String s,int from_i,int to_i){
 		String name=getName(s);
 		if(name==null){
 			message.setText(String.format(MSG_ERR_ENEMY,s));
@@ -151,7 +178,42 @@ public class ShogiGUI extends JFrame implements MouseListener{
 			message.setText("Shogi GUI");
 			table.clearSelection();
 			col=-1;
-			throw new ThreadDeath();
+			throw new IllegalArgumentException();
+		}else if(from_i<3||to_i<3){
+			String k=null;
+			switch(name){
+				case"FU":return"TO";
+				case"KI":return"KI";
+				case"KA":return"UM";
+				case"HI":return"RY";
+				case"TO":return"TO";
+				case"NY":return"NY";
+				case"NK":return"NK";
+				case"NG":return"NG";
+				case"UM":return"UM";
+				case"RY":return"RY";
+				case"GY":return"GY";
+				case"KE":
+					if(to_i==1)return"KE";
+					k="NK";
+				case"KY":
+					if(k==null)k="NY";
+					if(to_i==0)return k;
+				case"GI":
+					if(k==null)k="NG";
+					switch(JOptionPane.showConfirmDialog(this,String.format(MSG_NARU,name,k))){
+						case JOptionPane.YES_OPTION:
+							return k;
+						case JOptionPane.NO_OPTION:
+							return name;
+						case JOptionPane.CANCEL_OPTION:
+							throw new IllegalArgumentException();
+						default:
+							throw new IllegalStateException();
+					}
+				default:
+					throw new IllegalStateException();
+			}
 		}else return name;
 		throw new IllegalArgumentException();
 	}
@@ -192,7 +254,7 @@ public class ShogiGUI extends JFrame implements MouseListener{
 				table.setColumnSelectionInterval(col,ci[0]);
 				table.setRowSelectionInterval(row,ri[0]);
 			}
-		}catch(ThreadDeath ex){
+		}catch(IllegalArgumentException ex){
 			//ignore
 		}catch(Exception ex){e(ex);}
 	}
@@ -214,7 +276,7 @@ public class ShogiGUI extends JFrame implements MouseListener{
 				}else if(ri[1]==row){
 					tocol=ci[1];
 					torow=ri[0];
-				}else throw new IllegalStateException();
+				}else return;
 			}else if(ci[1]==col){
 				if(ri[0]==row){
 					tocol=ci[0];
@@ -222,20 +284,35 @@ public class ShogiGUI extends JFrame implements MouseListener{
 				}else if(ri[1]==row){
 					tocol=ci[0];
 					torow=ri[0];
-				}else throw new IllegalStateException();
-			}else throw new IllegalStateException();
+				}else return;
+			}else return;
 			checkMove(col,row,tocol,torow);
-			String out_string=String.format("%d%d%d%d%s",9-col,row+1,9-tocol,torow+1,checkName(table.getValueAt(row,col).toString()));
+			String out_string=String.format("%d%d%d%d%s",9-col,row+1,9-tocol,torow+1,checkName(table.getValueAt(row,col).toString(),row,torow));
 			pout.println(out_string);
 			System.out.println(out_string);
 			col=-1;
-		}catch(ThreadDeath ex){
+		}catch(IllegalArgumentException ex){
 			//ignore
 		}catch(Exception ex){e(ex);}
 	}
-	public void in(){while(true)try{pout.write(System.in.read());}catch(IOException e){e(e);}}
-	public static<T>void forEach(Enumeration<T>e,Consumer<T>c){while(e.hasMoreElements())c.accept(e.nextElement());}
-	public static void e(Exception e){System.err.printf("ShogiGUI:Exception in thread \"%s\" ",Thread.currentThread().getName());e.printStackTrace();}
+	public void in(){
+		while(true){
+			try{
+				pout.write(System.in.read());
+			}catch(IOException e){
+				e(e);
+			}
+		}
+	}
+	public static<T>void forEach(Enumeration<T>e,Consumer<T>c){
+		while(e.hasMoreElements()){
+			c.accept(e.nextElement());
+		}
+	}
+	public static void e(Exception e){
+		System.err.printf("ShogiGUI:Exception in thread \"%s\" ",Thread.currentThread().getName());
+		e.printStackTrace();
+	}
 	public static void help(){
 		System.out.println("Usage:");
 		System.out.println("java ShogiGUI -h");
