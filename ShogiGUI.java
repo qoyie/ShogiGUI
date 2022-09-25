@@ -8,13 +8,13 @@ import javax.swing.event.*;
 import javax.swing.table.*;
 
 public class ShogiGUI extends JFrame implements MouseListener{
-	public static final String ENCODE="UTF-8";
+	public static final String ENCODE=System.getProperty("ShogiGUI.input_encoding","UTF-8");
 	public static final boolean AUTO_NARU=false;
 	
 	public static final String MSG_SELECT="Selected %s (Click here to cancel)";
-	public static final String MSG_EXEC="Moving %s from %s to %s";
-	public static final String MSG_ERR_ENEMY="Error: %s is enemy's.";
-	public static final String MSG_ERR_CANNOT_MOVE="Error: %s cannot move to %s";
+	public static final String MSG_EXEC="Moving %s from %d,%d to %d,%d";
+	public static final String MSG_ERR_ENEMY="Error: %s is enemy's koma";
+	public static final String MSG_ERR_CANNOT_MOVE="Error: %s can't move to %d,%d";
 	public static final String MSG_ERR_INTERNAL_ERROR="Error: Internal error. Program will shutdown in 10sec.";
 	public static final String MSG_ERR_99SHOGI_EXITED="Error: 99shogi exited. Program will shutdown in 10sec.";
 	public static final String MSG_ERR_99SHOGI_DOES_NOT_RESPONSE="Error: 99shogi does not response by 10sec.";
@@ -39,7 +39,6 @@ public class ShogiGUI extends JFrame implements MouseListener{
 		forEach(header.getColumnModel().getColumns(),e->{e.setHeaderValue(var[0]==1?"／":""+ --var[0]);});
 		table.setDefaultEditor(Object.class,null);
 		table.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-		//table.getSelectionModel().addListSelectionListener(e->{System.out.println("columns:"+Arrays.toString(table.getSelectedColumns())+",rows:"+Arrays.toString(table.getSelectedRows()));});
 		table.setValueAt("一",0,9);
 		table.setValueAt("二",1,9);
 		table.setValueAt("三",2,9);
@@ -66,7 +65,7 @@ public class ShogiGUI extends JFrame implements MouseListener{
 		pb.redirectErrorStream(true);
 		proc=pb.start();
 		pin=new Scanner(proc.getInputStream(),ENCODE);
-		pout=new PrintStream(proc.getOutputStream());
+		pout=new PrintStream(proc.getOutputStream(),true);
 		main=new ShogiGUI("Shogi GUI");
 		new Thread(main::cui).start();
 		new Thread(main::in).start();
@@ -87,14 +86,17 @@ public class ShogiGUI extends JFrame implements MouseListener{
 	public void cui(){
 		try{
 			String line;
-			Thread t=Thread.currentThread();
+			//Thread t=Thread.currentThread();
 			while(true){
 				line=read();
-				if(line.equals(" 9  8  7  6  5  4  3  2  1 ")){
+				if(line.trim().equals("9  8  7  6  5  4  3  2  1")){
 					try{
 						SwingUtilities.invokeAndWait(()->{
 							for(int i=0;i<9;++i){
 								String l=read().replace("* ","*");
+								if(l.isEmpty()){
+									--i;continue;
+								}
 								table.setValueAt(l.substring(0,2),i,0);
 								table.setValueAt(l.substring(2,4),i,1);
 								table.setValueAt(l.substring(4,6),i,2);
@@ -104,7 +106,6 @@ public class ShogiGUI extends JFrame implements MouseListener{
 								table.setValueAt(l.substring(12,14),i,6);
 								table.setValueAt(l.substring(14,16),i,7);
 								table.setValueAt(l.substring(16,18),i,8);
-								read();
 							}
 							message.setText("Shogi GUI");
 						});
@@ -124,7 +125,7 @@ public class ShogiGUI extends JFrame implements MouseListener{
 	}
 	public String getName(String n){
 		switch(n){
-			case"+歩":return"HU";
+			case"+歩":return"FU";
 			case"+香":return"KY";
 			case"+桂":return"KE";
 			case"+銀":return"GI";
@@ -168,7 +169,7 @@ public class ShogiGUI extends JFrame implements MouseListener{
 		}
 	}
 	public void checkMove(int col,int row,int tocol,int torow){
-		message.setText(String.format(MSG_EXEC,table.getValueAt(row,col).toString().charAt(1),(9-col)+","+(row+1),(9-tocol)+","+(torow+1)));
+		message.setText(String.format(MSG_EXEC,table.getValueAt(row,col).toString().charAt(1),9-col,row+1,9-tocol,torow+1));
 		// TODO: Add check program.
 	}
 	public void mouseClicked(MouseEvent e){}
@@ -224,7 +225,9 @@ public class ShogiGUI extends JFrame implements MouseListener{
 				}else throw new IllegalStateException();
 			}else throw new IllegalStateException();
 			checkMove(col,row,tocol,torow);
-			pout.printf("%d%d%d%d%s%n",9-col,row+1,9-tocol,torow+1,checkName(table.getValueAt(row,col).toString()));
+			String out_string=String.format("%d%d%d%d%s",9-col,row+1,9-tocol,torow+1,checkName(table.getValueAt(row,col).toString()));
+			pout.println(out_string);
+			System.out.println(out_string);
 			col=-1;
 		}catch(ThreadDeath ex){
 			//ignore
